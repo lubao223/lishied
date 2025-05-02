@@ -11,10 +11,8 @@ import {
   doc,
   setDoc,
   getDoc,
-  updateDoc,
   serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
 
 // Firebase 設定
 const firebaseConfig = {
@@ -28,15 +26,22 @@ const firebaseConfig = {
   measurementId: "G-JBXQHB2444"
 };
 
+
 // 初始化 Firebase
 const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+getAnalytics(app);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// 等待 DOM 載入後產生登入/註冊畫面
 document.addEventListener("DOMContentLoaded", () => {
   const container = document.createElement("div");
+  container.id = "authContainer";
+  document.body.appendChild(container);
+  renderAuthForm("login");
+});
+
+function renderAuthForm(mode) {
+  const container = document.getElementById("authContainer");
   container.innerHTML = `
     <style>
       .auth-box {
@@ -75,57 +80,29 @@ document.addEventListener("DOMContentLoaded", () => {
         color: blue;
         cursor: pointer;
         text-decoration: underline;
-        position: relative;
       }
     </style>
-    <div class="auth-box" id="authBox">
-      <h2>登入</h2>
+    <div class="auth-box">
+      <h2>${mode === "login" ? "登入" : "註冊"}</h2>
+      ${mode === "register" ? '<input type="text" id="name" placeholder="名字" />' : ""}
       <input type="email" id="email" placeholder="帳號（Email）" />
       <input type="password" id="password" placeholder="密碼" />
-      <button id="loginBtn">登入</button>
-      <div class="switch" id="switchToRegister">沒有帳號？註冊</div>
+      <button id="${mode === "login" ? "loginBtn" : "registerBtn"}">${mode === "login" ? "登入" : "註冊"}</button>
+      <div class="switch" id="switchForm">
+        ${mode === "login" ? "沒有帳號？註冊" : "已有帳號？登入"}
+      </div>
     </div>
   `;
-  document.body.appendChild(container);
 
-  // 切換註冊畫面
-  document.getElementById("switchToRegister").onclick = () => {
-    document.getElementById("authBox").innerHTML = `
-      <h2>註冊</h2>
-      <input type="text" id="name" placeholder="名字" />
-      <input type="email" id="email" placeholder="帳號（Email）" />
-      <input type="password" id="password" placeholder="密碼" />
-      <button id="registerBtn">註冊</button>
-      <div class="switch" id="switchToLogin">已有帳號？登入</div>
-    `;
-    document.getElementById("switchToLogin").onclick = renderLoginForm;
-    document.getElementById("registerBtn").onclick = register;
-  };
+  document.getElementById("switchForm").addEventListener("click", () => {
+    renderAuthForm(mode === "login" ? "register" : "login");
+  });
 
-  document.getElementById("loginBtn").onclick = login;
-});
-
-function renderLoginForm() {
-  document.getElementById("authBox").innerHTML = `
-    <h2>登入</h2>
-    <input type="email" id="email" placeholder="帳號（Email）" />
-    <input type="password" id="password" placeholder="密碼" />
-    <button id="loginBtn">登入</button>
-    <div class="switch" id="switchToRegister">沒有帳號？註冊</div>
-  `;
-  document.getElementById("switchToRegister").onclick = () => {
-    document.getElementById("authBox").innerHTML = `
-      <h2>註冊</h2>
-      <input type="text" id="name" placeholder="名字" />
-      <input type="email" id="email" placeholder="帳號（Email）" />
-      <input type="password" id="password" placeholder="密碼" />
-      <button id="registerBtn">註冊</button>
-      <div class="switch" id="switchToLogin">已有帳號？登入</div>
-    `;
-    document.getElementById("switchToLogin").onclick = renderLoginForm;
-    document.getElementById("registerBtn").onclick = register;
-  };
-  document.getElementById("loginBtn").onclick = login;
+  if (mode === "login") {
+    document.getElementById("loginBtn").addEventListener("click", login);
+  } else {
+    document.getElementById("registerBtn").addEventListener("click", register);
+  }
 }
 
 async function register() {
@@ -139,54 +116,48 @@ async function register() {
   }
 
   try {
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    const uid = userCredential.user.uid;
-    await setDoc(doc(db, "users", uid), { name, email ,createdAt: serverTimestamp(), });
+    const { user } = await createUserWithEmailAndPassword(auth, email, password);
+    await setDoc(doc(db, "users", user.uid), {
+      name,
+      email,
+      createdAt: serverTimestamp(),
+    });
     alert("註冊成功，請登入");
-    renderLoginForm();
+    renderAuthForm("login");
   } catch (error) {
     alert("註冊失敗：" + error.message);
   }
 }
 
 async function login() {
-    const email = document.getElementById("email").value.trim();
-    const password = document.getElementById("password").value;
-  
-    if (!email || !password) {
-      alert("請填寫帳號與密碼");
-      return;
-    }
-  
-   
-    try {
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        const uid = userCredential.user.uid;
-    
-        // 登入成功後取得使用者資料
-        const docSnap = await getDoc(doc(db, "users", uid));
-    
-        if (docSnap.exists()) {
-          const userData = docSnap.data();
-          await updateDoc(doc(db, "users", uid), {
-            lastLogin: serverTimestamp(),  // 🔹 最後登入時間
-          });
-          if (uid === "lAYhQE6KpQWhBiqFxE8EYV9pN1J3") {
-            alert("歡迎管理員 " + userData.name);
-            window.location.href = "admin-dashboard.html"; // 進入後台
-          } else {
-            alert("登入成功，歡迎 " + userData.name);
-            
-            window.location.href = "main.html"; // 普通使用者頁面
-          }
-        } else {
-          alert("找不到使用者資料");
-        }
-      } catch (error) {
-        alert("登入失敗：" + error.message);
-      }
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
+  const loginBtn = document.getElementById("loginBtn");
+
+  if (!email || !password) {
+    alert("請填寫帳號與密碼");
+    return;
   }
-  
 
+  loginBtn.disabled = true;
+  loginBtn.textContent = "登入中...";
 
+  try {
+    const { user } = await signInWithEmailAndPassword(auth, email, password);
+    const docSnap = await getDoc(doc(db, "users", user.uid));
 
+    if (docSnap.exists()) {
+      const userData = docSnap.data();
+      const isAdmin = user.uid === "lAYhQE6KpQWhBiqFxE8EYV9pN1J3";
+      alert(`歡迎 ${isAdmin ? "管理員 " : ""}${userData.name}`);
+      window.location.href = isAdmin ? "admin-dashboard.html" : "main.html";
+    } else {
+      alert("找不到使用者資料");
+    }
+  } catch (error) {
+    alert("登入失敗：" + error.message);
+  } finally {
+    loginBtn.disabled = false;
+    loginBtn.textContent = "登入";
+  }
+}
