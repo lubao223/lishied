@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>圖片按鈕排版發聲</title>
+<style>
+  .container {
+    position: relative; /* 讓容器成為絕對定位元素的參考 */
+    width: 600px; /* 根據圖片的寬度調整 */
+    height: 400px; /* 根據圖片的高度調整 */
+    background-image: url('your_image.png'); /* 設定背景圖片 */
+    background-size: contain; /* 確保圖片完整顯示並維持比例 */
+    border: 1px solid #ccc; /* 可選：顯示容器邊框 */
+  }
+
+  .abs-button {
+    position: absolute;
+    background: none; /* 移除按鈕預設背景 */
+    border: none; /* 移除按鈕邊框 */
+    padding: 0;
+    margin: 0;
+    cursor: pointer;
+    color: black; /* 設定文字顏色 */
+    font-size: 16px; /* 設定文字大小 */
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  /* 根據圖片目測位置和尺寸調整每個按鈕的位置和大小 */
+  .button-tamen { top: 10px; left: 10px; width: 80px; height: 30px; }
+  .button-chao { top: 10px; left: 100px; width: 60px; height: 30px; }
+  .button-wo { top: 10px; left: 170px; width: 60px; height: 30px; }
+  .button-reng { top: 10px; left: 240px; width: 60px; height: 30px; }
+  .button-pa1 { top: 10px; left: 310px; width: 60px; height: 30px; }
+  .button-pa2 { top: 10px; left: 380px; width: 60px; height: 30px; }
+
+  .button-wo_jian_qi { top: 50px; left: 10px; width: 100px; height: 30px; }
+  .button-wo_na { top: 50px; left: 120px; width: 60px; height: 30px; }
+  .button-yan { top: 50px; left: 190px; width: 60px; height: 30px; }
+  .button-tou { top: 50px; left: 260px; width: 60px; height: 30px; }
+  .button-ji { top: 50px; left: 330px; width: 60px; height: 30px; }
+  .button-dan { top: 50px; left: 400px; width: 60px; height: 30px; }
+
+  .button-dan_chao_fan { top: 90px; left: 10px; width: 100px; height: 30px; }
+  .button-ba_ba { top: 90px; left: 120px; width: 60px; height: 30px; }
+  .button-yan_tou2 { top: 90px; left: 190px; width: 80px; height: 30px; }
+  .button-mei_zuo { top: 90px; left: 280px; width: 60px; height: 30px; }
+  .button-zuo { top: 90px; left: 350px; width: 60px; height: 30px; }
+
+  .button-chou_liang_kou { top: 130px; left: 10px; width: 100px; height: 30px; }
+  .button-dan_bing { top: 130px; left: 120px; width: 60px; height: 30px; }
+  .button-bai_cai { top: 130px; left: 190px; width: 60px; height: 30px; }
+  .button-wo_bu_shi_a_nuo { top: 130px; left: 260px; width: 140px; height: 30px; }
+
+  .button-wowowowo { top: 170px; left: 20px; width: 560px; height: 40px; font-size: 20px; }
+
+</style>
+</head>
+<body>
+
+<div class="container">
+  <button class="abs-button button-tamen" onclick="playSound('tamen')">他們</button>
+  <button class="abs-button button-chao" onclick="playSound('chao')">朝</button>
+  <button class="abs-button button-wo" onclick="playSound('wo')">我</button>
+  <button class="abs-button button-reng" onclick="playSound('reng')">扔</button>
+  <button class="abs-button button-pa1" onclick="playSound('pa1')">粑</button>
+  <button class="abs-button button-pa1" onclick="playSound('pa1')">粑</button>
+
+  <button class="abs-button button-wo_jian_qi" onclick="playSound('wo_jian_qi')">我撿起</button>
+  <button class="abs-button button-wo_na" onclick="playSound('wo_na')">我拿</button>
+  <button class="abs-button button-yan" onclick="playSound('yan')">煙</button>
+  <button class="abs-button button-tou" onclick="playSound('tou')">頭</button>
+  <button class="abs-button button-ji" onclick="playSound('ji')">雞</button>
+  <button class="abs-button button-dan" onclick="playSound('dan')">蛋</button>
+
+  <button class="abs-button button-dan_chao_fan" onclick="playSound('dan_chao_fan')">蛋炒飯</button>
+  <button class="abs-button button-ba_ba" onclick="playSound('ba_ba')">粑粑</button>
+  <button class="abs-button button-yan_tou2" onclick="playSound('yan_tou2')">煙頭</button>
+  <button class="abs-button button-mei_zuo" onclick="playSound('mei_zuo')">沒座</button>
+  <button class="abs-button button-zuo" onclick="playSound('zuo')">做</button>
+
+  <button class="abs-button button-chou_liang_kou" onclick="playSound('chou_liang_kou')">抽兩口</button>
+  <button class="abs-button button-dan_bing" onclick="playSound('dan_bing')">蛋撻</button>
+  <button class="abs-button button-bai_cai" onclick="playSound('bai_cai')">白菜</button>
+  <button class="abs-button button-wo_bu_shi_a_nuo" onclick="playSound('wo_bu_shi_a_nuo')">我不是阿諾</button>
+
+  <button class="abs-button button-wowowowo" onclick="playSound('wowowowo')">哦哦哦哦哦哦～</button>
+</div>
+
+<audio id="tamen" src="tamen.mp3"></audio>
+<audio id="chao" src="chao.mp3"></audio>
+<audio id="wo" src="wo.mp3"></audio>
+<audio id="reng" src="reng.mp3"></audio>
+<audio id="pa1" src="pa1.mp3"></audio>
+<audio id="pa2" src="pa1.mp3"></audio>
+<audio id="wo_jian_qi" src="wo_jian_qi.mp3"></audio>
+<audio id="wo_na" src="wo_na.mp3"></audio>
+<audio id="yan" src="yan.mp3"></audio>
+<audio id="tou" src="tou.mp3"></audio>
+<audio id="ji" src="ji.mp3"></audio>
+<audio id="dan" src="dan.mp3"></audio>
+<audio id="dan_chao_fan" src="dan_chao_fan.mp3"></audio>
+<audio id="ba_ba" src="ba_ba.mp3"></audio>
+<audio id="yan_tou2" src="yan_tou2.mp3"></audio>
+<audio id="mei_zuo" src="mei_zuo.mp3"></audio>
+<audio id="zuo" src="zuo.mp3"></audio>
+<audio id="chou_liang_kou" src="chou_liang_kou.mp3"></audio>
+<audio id="dan_bing" src="dan_bing.mp3"></audio>
+<audio id="bai_cai" src="bai_cai.mp3"></audio>
+<audio id="wo_bu_shi_a_nuo" src="wo_bu_shi_a_nuo.mp3"></audio>
+<audio id="wowowowo" src="wowowowo.mp3"></audio>
+
+<script>
+function playSound(soundId) {
+  var audio = document.getElementById(soundId);
+  audio.play();
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+   
+  <meta charset="UTF-8" />
+   
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>後台管理</title>
+    <style>
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    table,
+    th,
+    td {
+      border: 1px solid #ddd;
+    }
+
+    th,
+    td {
+      padding: 12px;
+      text-align: left;
+    }
+
+    button {
+      padding: 5px 10px;
+      background-color: red;
+      color: white;
+      border: none;
+      cursor: pointer;
+      margin-right: 4px;
+    }
+
+    button:hover {
+      background-color: darkred;
+    }
+
+    .edit-btn {
+      background-color: blue;
+    }
+
+    .edit-btn:hover {
+      background-color: darkblue;
+    }
+  </style>
+</head>
+
+<body>
+    <h1>後台管理系統</h1>
+    <button onclick="logout()">登出</button>
+
+    <table id="usersTable">
+        <thead>
+            <tr>
+                <th>使用者名稱</th>
+                <th>電子郵件</th>
+                <th>註冊時間</th>
+                <th>最後登入</th>
+                <th>成就完成率</th>
+                <th>操作</th>
+              </tr>
+          </thead>
+        <tbody></tbody>
+      </table>
+
+   
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, collection, getDocs, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+
+ 
+
+    const firebaseConfig = {
+    apiKey: "AIzaSyAxEJP1PcgOUchT_6qHyG5y4f2NvAyB12k",
+    authDomain: "test001-b582f.firebaseapp.com",
+    databaseURL: "https://test001-b582f-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "test001-b582f",
+    storageBucket: "test001-b582f.firebasestorage.app",
+    messagingSenderId: "568098017999",
+    appId: "1:568098017999:web:f7729d8bcc1710be1f9dba",
+    measurementId: "G-JBXQHB2444"
+  };
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const rtdb = getDatabase(app);
+    const auth = getAuth(app);
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        alert("請先登入才能進入後台！");
+        window.location.href = "index.html";
+      } else {
+        if (user.email !== "lubaoai001@gmail.com") {
+          alert("你不是管理員，無權訪問後台！");
+          window.location.href = "index.html";
+        } else {
+          loadUsers();
+        }
+      }
+    });
+
+    function formatDate(date) {
+      return date ? new Date(date).toLocaleString("zh-Hant") : "無資料";
+    }
+
+    async function getCompletionRate(userId) {
+      const achievementRef = ref(rtdb, `achievements/${userId}`);
+      try {
+        const snapshot = await get(achievementRef);
+        if (snapshot.exists()) {
+          const data = snapshot.val();
+          const total = 6;
+          const completed = Object.values(data).filter(v => v === true).length;
+          return `${completed}/${total} (${Math.round((completed / total) * 100)}%)`;
+        } else {
+          return "0/0 (0%)";
+        }
+      } catch {
+        return "錯誤";
+      }
+    }
+
+    async function viewAchievements(userId) {
+      const achievementRef = ref(rtdb, `achievements/${userId}`);
+      try {
+        const snapshot = await get(achievementRef);
+        if (snapshot.exists()) {
+          const data = snapshot.val();
+          let message = `使用者 ${userId} 的成就：\n\n`;
+          for (const [key, value] of Object.entries(data)) {
+            message += `${key}：${value ? "✅" : "❌"}\n`;
+          }
+          alert(message);
+        } else {
+          alert("尚未有成就資料");
+        }
+      } catch (error) {
+        alert("讀取成就失敗：" + error.message);
+      }
+    }
+
+    async function loadUsers() {
+      const usersTableBody = document.getElementById("usersTable").getElementsByTagName("tbody")[0];
+      usersTableBody.innerHTML = "";
+      const usersRef = collection(db, "users");
+      const querySnapshot = await getDocs(usersRef);
+
+      for (const docSnap of querySnapshot.docs) {
+        const userData = docSnap.data();
+        const row = usersTableBody.insertRow();
+
+        const nameCell = row.insertCell(0);
+        const emailCell = row.insertCell(1);
+        const createdCell = row.insertCell(2);
+        const loginCell = row.insertCell(3);
+        const progressCell = row.insertCell(4);
+        const actionCell = row.insertCell(5);
+
+        nameCell.textContent = userData.name || "(無名稱)";
+        emailCell.textContent = userData.email || "(無 Email)";
+        createdCell.textContent = formatDate(userData.createdAt?.toDate?.());
+        loginCell.textContent = formatDate(userData.lastLogin?.toDate?.());
+
+        // 顯示完成率
+        progressCell.textContent = "載入中...";
+        getCompletionRate(docSnap.id).then(rate => {
+          progressCell.textContent = rate;
+        });
+
+        // 操作按鈕
+        const editButton = document.createElement("button");
+        editButton.textContent = "編輯";
+        editButton.className = "edit-btn";
+        editButton.onclick = () => editUser(docSnap.id, userData);
+        actionCell.appendChild(editButton);
+
+        const deleteButton = document.createElement("button");
+        deleteButton.textContent = "刪除";
+        deleteButton.onclick = () => deleteUser(docSnap.id);
+        actionCell.appendChild(deleteButton);
+
+        const viewButton = document.createElement("button");
+        viewButton.textContent = "檢視成就";
+        viewButton.className = "edit-btn";
+        viewButton.onclick = () => viewAchievements(docSnap.id);
+        actionCell.appendChild(viewButton);
+      }
+    }
+
+    async function editUser(userId, userData) {
+      const newName = prompt("編輯使用者名稱", userData.name);
+      if (newName && newName !== userData.name) {
+        const userRef = doc(db, "users", userId);
+        try {
+          await updateDoc(userRef, { name: newName });
+          alert("更新成功！");
+          location.reload();
+        } catch (error) {
+          alert("更新失敗：" + error.message);
+        }
+      }
+    }
+
+    async function deleteUser(userId) {
+      const confirmed = confirm("確定要刪除此使用者嗎？");
+      if (confirmed) {
+        try {
+          await deleteDoc(doc(db, "users", userId));
+          alert("使用者已刪除");
+          location.reload();
+        } catch (error) {
+          alert("刪除失敗：" + error.message);
+        }
+      }
+    }
+
+    window.logout = function () {
+      signOut(auth).then(() => {
+        window.location.href = "index.html";
+      }).catch((error) => {
+        alert("登出失敗：" + error.message);
+      });
+    };
+  </script>
+</body>
+
+</html>

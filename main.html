@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>歷史學習主頁</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      background-color: #f4f4f4;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #007BFF;
+      color: white;
+      padding: 1rem 2rem;
+      position: relative;
+    }
+    .menu {
+      display: flex;
+      justify-content: space-between;
+      flex-grow: 4;
+    }
+    .menu-item, .username {
+      flex-grow: 1;
+      text-align: center;
+      padding: 0.5rem 0;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    .menu-item:hover, .username:hover {
+      background-color: rgba(255, 255, 255, 0.2);
+    }
+    .username {
+      position: relative;
+    }
+    .dropdown {
+      display: none;
+      position: absolute;
+      right: 0;
+      top: 3.5rem;
+      background-color: white;
+      color: black;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      overflow: hidden;
+      z-index: 10;
+    }
+    .dropdown a {
+      display: block;
+      padding: 0.5rem 1rem;
+      text-decoration: none;
+      color: black;
+    }
+    .dropdown a:hover {
+      background-color: #f0f0f0;
+    }
+    .content {
+      padding: 2rem;
+      background: white;
+      margin: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+    .card-container {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      padding: 20px;
+    }
+    .card {
+      border: 1px solid #ccc;
+      padding: 16px;
+      background: #fff;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .card:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+    .card img {
+      width: 100%;
+      border-radius: 8px;
+    }
+    .card h2 {
+      margin-top: 12px;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      align-items: center;
+      justify-content: center;
+      overflow: auto; /* 啟用捲動 */
+    }
+    .modal-content {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      width: 60%;
+      text-align: center;
+      
+    }
+    .modal-content button {
+      margin: 10px;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .modal-content .close-btn {
+      background-color: red;
+      color: white;
+    }
+    .modal-content .complete-btn {
+      background-color: green;
+      color: white;
+    }
+
+
+
+
+
+    h2 {
+  font-size: 24px;
+  color: #444;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+/* 留言區輸入框 */
+textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  margin-bottom: 10px;
+  resize: vertical;
+  transition: border-color 0.3s;
+}
+
+textarea:focus {
+  border-color: #4caf50;
+  outline: none;
+}
+
+/* 按鈕樣式 */
+button {
+  padding: 10px 15px;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-right: 10px;
+  transition: background-color 0.3s;
+}
+
+button:hover {
+  background-color: #45a049;
+}
+
+/* 留言區樣式 */
+#commentsList {
+  margin-top: 30px;
+}
+
+.comment {
+  background-color: #fafafa;
+  padding: 15px;
+  border: 1px solid #e0e0e0;
+  margin-bottom: 15px;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.3s;
+  line-height: 1.8;  /* 增加行間距 */
+}
+
+.comment:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-color: #4caf50; /* 外框顏色改為綠色 */
+}
+
+.comment-header {
+  font-weight: bold;
+  margin-bottom: 10px;
+  font-size: 16px;
+}
+
+.comment-text {
+  margin-bottom: 10px;
+  font-size: 14px;
+}
+
+.comment-time {
+  font-size: 12px;
+  color: #777;
+}
+
+.comment-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
+.comment-buttons button {
+  padding: 5px 10px;
+  font-size: 13px;
+  border-radius: 6px;
+  margin: 0;
+}
+
+/* 註解按讚按鈕 */
+button[onclick^="likeComment"] {
+  background-color: #ff9800;
+  border-radius: 20px;
+  padding: 6px 12px;
+  font-size: 14px;
+}
+
+button[onclick^="likeComment"]:hover {
+  background-color: #fb8c00;
+}
+
+.card-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.card {
+  width: 300px;
+  border: 1px solid #ccc;
+  padding: 0.5rem;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+.card:hover {
+  transform: scale(1.03);
+}
+details {
+  margin-bottom: 1.5rem;
+  border: 1px solid #aaa;
+  padding: 0.5rem;
+  border-radius: 6px;
+  background: #f9f9f9;
+}
+summary {
+  font-weight: bold;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+.leaderboard-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.leaderboard-entry {
+  width: 300px;
+  text-align: center;
+  padding: 10px;
+  margin: 5px 0;
+  border-radius: 8px;
+  font-size: 18px;
+  font-weight: bold;
+  color: black;
+  background-color: white;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.leaderboard-entry.gold {
+  background-color: gold;
+}
+
+.leaderboard-entry.silver {
+  background-color: silver;
+}
+
+.leaderboard-entry.bronze {
+  background-color: #cd7f32; /* 銅色 */
+}
+/* 已完成卡片的樣式 */
+.card.completed {
+  background-color: gold; /* 淡藍色或其他你喜歡的顏色 */
+  border: 1px solid #ccc;
+}
+  </style>
+</head>
+<body>
+  <script type="module" src="js/maindb.js"></script>
+  <header>
+    <div class="menu">
+      <div class="menu-item" onclick="updateContent(1)">歷史建築介紹</div>
+      <div class="menu-item" onclick="updateContent(2)">地理位置猜猜看</div>
+      <div class="menu-item" onclick="updateContent(3)">留言板</div>
+      <div class="menu-item" onclick="updateContent(4)">成就</div>
+      <div class="menu-item" onclick="updateContent(5)">排行榜</div>
+      
+    </div>
+    <div class="username" onclick="toggleDropdown()">
+      <span id="user-name">使用者</span>
+      <div class="dropdown" id="user-dropdown">
+        <a href="#" onclick="showProfile()">查看資料</a>
+        <a href="#" onclick="logout()">登出</a>
+      </div>
+    </div>
+  </header>
+
+  <div class="content" id="main-content">
+    請點選上方項目查看內容。
+  </div>
+
+  <!-- Modal for card details -->
+  <div id="modal" class="modal">
+    <div class="modal-content">
+      <img id="modal-img" src="" alt="" style="width: 100%; border-radius: 8px;">
+      <h2 id="modal-title"></h2>
+      <div id="modal-description"></div>
+      <button id="complete-btn" class="complete-btn" onclick="markComplete()">完成</button>
+      <button id="close-btn"class="close-btn" onclick="closeModal()">關閉</button>
+      <button id="how" onclick="closeModal()"> 好 </button>
+    </div>
+  </div>
+
+  <script src="js/main.js" ></script>
+  
+  </script>
+</body>
+</html>

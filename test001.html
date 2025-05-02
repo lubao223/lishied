@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>歷史地點猜猜看</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" rel="stylesheet" />
+  <style>
+    #map {
+      height: 60vh;
+      width: 100%;
+    }
+
+    body {
+      font-family: sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    .question {
+      padding: 10px;
+    }
+
+    #result,
+    #score {
+      padding: 10px;
+      font-weight: bold;
+    }
+
+    button {
+      margin: 10px;
+      padding: 8px 16px;
+      font-size: 1em;
+    }
+
+    #retryButton {
+      display: none;
+    }
+
+    /* 預設隱藏重新挑戰按鈕 */
+  </style>
+</head>
+
+<body>
+
+  <div class="question" id="questionText">題目載入中...</div>
+  <div id="map"></div>
+  <div id="result"></div>
+  <button onclick="submitAnswer()">送出答案</button>
+  <div id="score"></div>
+  <button id="retryButton" onclick="retryChallenge()">重新挑戰</button> <!-- 新增的重新挑戰按鈕 -->
+  <button id="hintButton" onclick="showHint()" disabled>提示</button>
+  <div id="hintCount">剩餘提示次數：5</div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    let totalHintCount = 5; // 總共可用提示次數
+    const regions = {
+      "臺北市": { lat: 25.04, lng: 121.53 },
+      "新北市": { lat: 25.00, lng: 121.63 },
+      "基隆市": { lat: 25.13, lng: 121.74 },
+      "桃園市": { lat: 24.99, lng: 121.30 },
+      "新竹市": { lat: 24.80, lng: 120.97 },
+      "新竹縣": { lat: 24.70, lng: 121.07 },
+      "宜蘭縣": { lat: 24.67, lng: 121.75 },
+      "臺中市": { lat: 24.18, lng: 120.68 },
+      "苗栗縣": { lat: 24.56, lng: 120.82 },
+      "彰化縣": { lat: 23.96, lng: 120.54 },
+      "南投縣": { lat: 23.90, lng: 120.96 },
+      "雲林縣": { lat: 23.70, lng: 120.50 },
+      "嘉義市": { lat: 23.48, lng: 120.45 },
+      "嘉義縣": { lat: 23.52, lng: 120.60 },
+      "臺南市": { lat: 23.00, lng: 120.20 },
+      "高雄市": { lat: 22.63, lng: 120.30 },
+      "屏東縣": { lat: 22.67, lng: 120.57 },
+      "澎湖縣": { lat: 23.57, lng: 119.59 },
+      "花蓮縣": { lat: 23.97, lng: 121.60 },
+      "臺東縣": { lat: 22.75, lng: 121.15 }
+    };
+    const questions = [
+      {
+        desc: "古廟坐落臺南城，東北朝向三百年。五妃墓旁有義靈君，祭拜忠貞情人來。這座廟，位於哪裡？",
+        lat: 22.982081,
+        lng: 120.205214,
+        county: "臺南市"
+      },
+      {
+        desc: "舊名三鯤鯓、安平大砲臺，清朝時期築，現為國定古蹟。俗稱億載金城，位於臺南市。這座砲臺，究竟是哪裡？",
+        lat: 22.988531,  // 二鯤鯓砲臺（億載金城）的緯度
+        lng: 120.160207,  // 二鯤鯓砲臺（億載金城）的經度
+        county: "臺南市"
+      },
+      {
+        desc: "位於臺南市中西區，建於明鄭永曆十九年，是臺灣最早的文廟，曾是全臺童生唯一入學之所。這座廟，究竟是哪裡？",
+        lat: 22.990523,  // 臺南孔子廟的緯度
+        lng: 120.204267,  // 臺南孔子廟的經度
+        county: "臺南市"
+      },
+      {
+        desc: "曾是荷蘭的堡壘，後來成為英國的守望，歷經時光的變遷，依然屹立在河邊。從我這裡，你能遠眺淡水的風光，見證歷史的痕跡。紅磚構成我堅固的身軀，幾度變換過名字，但我依然是那座見證殖民過往的城堡。",
+        lat: 25.17543,
+        lng: 121.432942,
+        county: "新北市"
+      }, {
+        desc: "紅磚拱廊立山崗，海風輕拂訴過往。 理事官邸花木香，階梯蜿蜒入眼眶。 眺望港都船影動，見證打狗開埠光。請問，這處紅樓是何方？",
+        lat: 22.618849,
+        lng: 120.266948,
+        county: "高雄市"
+      }, {
+        desc: "臺北古剎香火盛，雕樑畫棟燕尾稜。保生大帝慈悲佑，醫術濟世保安寧。花彩迎神繞境鬧，大龍峒邊世代情。請問，這座廟宇何處尋？",
+        lat: 25.073626,
+        lng: 121.515517,
+        county: "臺北市"
+      },
+      {
+        desc: "花蓮吉安有淨土，日式庭園竹影扶。 不動明王慈眼視，手印相結佑眾生。 昔日移民心靈寄，今朝遊客訪古樸。請問，這座靜謐院落何處駐？",
+        lat: 23.974302701095226,
+        lng: 121.5644285095056,
+        county: "花蓮縣"
+      }, {
+        desc: "險峻山路鑿開闢，汗水血淚寫歷史。 紀念碑石靜默立，追憶先人拓荒志。 花蓮吉安風光裡，一段艱辛永不逝。請問，這座碑石為誰立？",
+        lat: 23.948905,
+        lng: 121.52323,
+        county: "花蓮縣"
+      }, {
+        desc: "府城巷弄石坊立，旌表貞烈節義事。 林氏孀居守孤子，孝行感天動人知。 歲月流轉風霜刻，坊柱猶存後人思。請問，這座牌坊紀念何人持？",
+        lat: 24.34464502461078,
+        lng: 120.62187266718843,
+        county: "臺中市"
+      }, {
+        desc: "城牆遺跡藏西門，洋樓古砲憶昔人。紅毛築下商道始，儒道同祀幾番春。昔稱番仔今赤嵌，此樓身世最傳神。請問，這是哪個歷史遺址？",
+        lat: 22.9975,
+        lng: 120.202811,
+        county: "臺南市"
+      },
+      {
+        desc: "紅磚矗立百年久，辰野風華日治留。昔為總督府堂堂，今是元首施政樓。國旗升起迎朝陽，廣場談話定今朝。嚴管遊行非隨意，此座古蹟在哪挑？",
+        lat: 25.04,
+        lng: 121.511944,
+        county: "臺北市"
+      },
+      {
+        desc: "海壇神像過台來，施將請母定鹿台。雍正歲月香火旺，湄洲祖祠對門開。宮內聖母鎮百年，右廂祀將耀德齊。香客萬千虔參拜，此廟信仰幾人知？",
+        lat: 24.059338,
+        lng: 120.43138,
+        county: "彰化縣"
+      },
+      {
+        desc: "觀音慈顏坐北城，香火鼎盛數百程。艋舺街頭傳佛號，地震炮火不曾傾。信徒朝拜求平安，藝匠雕梁畫棟精。國定古蹟今猶在，請問此寺是何名？",
+        lat: 25.037347,
+        lng: 121.499893,
+        county: "臺北市"
+      },
+      {
+        desc: "鐵道圓心轉調忙，扇形半月列車藏。百年鋼骨仍運作，十二股道射北方。蒸汽餘暉今可見，工業遺產入史章。彰化北側藏寶地，此處古蹟哪裡望？",
+        lat: 24.086111,
+        lng: 120.540202,
+        county: "彰化縣"
+      },
+
+
+
+
+
+    ];
+
+    const x = 3;  // 設定要抽取的題目數量 (你可以在這裡更改)
+    let current = 0;
+    let totalScore = 0;
+    let selectedLatLng = null;
+    let selectedQuestions = [];  // 存放已選擇的題目
+
+    const map = L.map('map').setView([25.04, 121.56], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap',
+      maxZoom: 19,
+    }).addTo(map);
+
+    let markerGuess, markerAnswer, line;
+
+    map.on('click', function (e) {
+      selectedLatLng = e.latlng;
+      if (markerGuess) map.removeLayer(markerGuess);
+      markerGuess = L.marker(selectedLatLng).addTo(map).bindPopup("你的猜測").openPopup();
+
+      if (totalHintCount > 0) {
+        document.getElementById("hintButton").disabled = false;
+      }
+    });
+
+    // 隨機選擇題目並確保不重複
+    function getRandomQuestions(num) {
+      const availableQuestions = [...questions];  // 複製原始問題
+      const randomQuestions = [];
+
+      for (let i = 0; i < num; i++) {
+        const randomIndex = Math.floor(Math.random() * availableQuestions.length);  // 隨機選擇一題
+        const question = availableQuestions.splice(randomIndex, 1)[0];  // 從可用題目中刪除已選題目
+        randomQuestions.push(question);
+      }
+
+      return randomQuestions;
+    }
+
+    function loadQuestion() {
+      if (current === 0) {
+        selectedQuestions = getRandomQuestions(x); 
+        totalHintCount = 5;  
+      };
+      
+      const currentQuestion = selectedQuestions[current];
+      document.getElementById("questionText").innerText = `題目 ${current + 1}：${currentQuestion.desc}`;
+      document.getElementById("result").innerHTML = "";
+      if (markerGuess) map.removeLayer(markerGuess);
+      if (markerAnswer) map.removeLayer(markerAnswer);
+      if (line) map.removeLayer(line);
+      selectedLatLng = null;
+
+      // 根據題目的 county 設定地圖中心
+      if (currentQuestion.county && regions[currentQuestion.county]) {
+        map.setView([regions[currentQuestion.county].lat, regions[currentQuestion.county].lng], 11); // 調整縮放等級以更精確顯示縣市
+      } else {
+        // 如果題目沒有 county 資訊，則使用預設視角
+        map.setView([23.70, 121.00], 8); // 台灣大致中心點及適當縮放
+      }
+    }
+    function calculateScore(distance) {
+  const distanceInMeters = distance;
+  let score = 0;
+
+  if (distanceInMeters <= 50) {
+    score = 100;
+  } else if (distanceInMeters <= 100) {
+    score = 95;
+  } else if (distanceInMeters <= 150) {
+    score = 90;
+  } else if (distanceInMeters <= 200) {
+    score = 85;
+  } else if (distanceInMeters <= 300) {
+    score = 80;
+  } else if (distanceInMeters <= 400) {
+    score = 75;
+  } else if (distanceInMeters <= 500) {
+    score = 70;
+  } else if (distanceInMeters <= 600) {
+    score = 65;
+  } else if (distanceInMeters <= 700) {
+    score = 60;
+  } else if (distanceInMeters <= 800) {
+    score = 55;
+  } else if (distanceInMeters <= 900) {
+    score = 50;
+  } else if (distanceInMeters <= 1000) {
+    score = 45;
+  } else if (distanceInMeters > 1000 && distanceInMeters <= 5000) {
+    // 超過 1 公里，每 100 公尺只扣 1 分（最多扣 40 分）
+    score = Math.max(5, 45 - Math.floor((distanceInMeters - 1000) / 100));
+  } else {
+    // 超過 5 公里還保底 5 分
+    score = 5;
+  }
+
+  document.getElementById("hintButton").disabled = true;
+  return score;
+}
+
+    function submitAnswer() {
+      if (!selectedLatLng) {
+        alert("請先在地圖上點選猜測位置！");
+        return;
+      }
+
+      const correct = selectedQuestions[current];
+      const distance = map.distance(selectedLatLng, { lat: correct.lat, lng: correct.lng }); // meters
+      const score = calculateScore(distance);
+
+      // 顯示答案與線
+      markerAnswer = L.marker([correct.lat, correct.lng], {
+        icon: L.icon({
+          iconUrl: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png',
+          iconSize: [32, 32]
+        })
+      }).addTo(map).bindPopup("正確位置").openPopup();
+
+      line = L.polyline([selectedLatLng, [correct.lat, correct.lng]], { color: 'red' }).addTo(map);
+
+      document.getElementById("result").innerHTML =
+        `你距離正確位置約 <b>${(distance / 1000).toFixed(2)} 公里</b>，本題得分：<b>${score}</b> 分`;
+
+      totalScore += score;
+      current++;
+
+      if (current < selectedQuestions.length) {
+        setTimeout(() => loadQuestion(), 3000);
+      } else {
+        setTimeout(() => {
+          document.getElementById("questionText").innerText = "🎉 遊戲結束！";
+          document.getElementById("score").innerHTML = `總分：<b>${totalScore} / ${selectedQuestions.length * 100}</b>`;
+
+          let bestScore = localStorage.getItem("bestScore");
+          let isFirstTime = bestScore === null;
+          let isNewRecord = !bestScore || totalScore > bestScore;
+
+          // 儲存當前遊戲分數
+          localStorage.setItem("gameScore", totalScore);
+
+          // 如果是第一次或創新紀錄，就更新 bestScore 並通知父頁面
+          if (isNewRecord) {
+            localStorage.setItem("bestScore", totalScore);
+            alert("恭喜創下新紀錄！");
+
+            if (window.parent && typeof window.parent.receiveGameScore === "function") {
+              window.parent.receiveGameScore(totalScore);
+            }
+          }
+
+          // 顯示最佳紀錄到 console（可選）
+          const savedBestScore = localStorage.getItem("bestScore");
+          console.log("最佳紀錄:", savedBestScore);
+
+          // 顯示重新挑戰按鈕
+          document.getElementById("retryButton").style.display = "inline-block"; // 顯示重新挑戰按鈕
+        }, 2000);
+      }
+    }
+
+    // 重新挑戰的函數
+    function retryChallenge() {
+      current = 0;
+      totalScore = 0;
+      document.getElementById("score").innerHTML = "";
+      document.getElementById("retryButton").style.display = "none"; // 隱藏重新挑戰按鈕
+      selectedQuestions = getRandomQuestions(x);  // 重新抽取 3 題
+      totalHintCount = 5;
+      loadQuestion();
+    }
+
+
+    function showHint() {
+      if (!selectedLatLng) {
+        alert("請先在地圖上點選你的猜測位置！");
+        return;
+      }
+
+      if (totalHintCount > 0) {
+        const correct = selectedQuestions[current];
+        const distancex = map.distance(selectedLatLng, { lat: correct.lat, lng: correct.lng }); // meters
+        const distanceInKmx = (distancex / 1000).toFixed(2);
+
+        alert(`你目前的位置距離正確答案約 ${distanceInKmx} 公里。\n剩餘提示次數：${--totalHintCount}`);
+        document.getElementById("hintCount").innerText = `剩餘提示次數：${totalHintCount}`;
+        // 不在這裡禁用按鈕，讓玩家可以再次點擊提示
+        if (totalHintCount === 0) {
+          document.getElementById("hintButton").disabled = true; // 用完所有提示才禁用
+        }
+      } else {
+        alert("你已經用完所有提示次數了！");
+        document.getElementById("hintButton").disabled = true;
+      }
+    }
+
+
+
+    // 初始化第一題
+    loadQuestion();
+
+  </script>
+</body>
+
+</html>

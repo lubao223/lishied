@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>圖片按鈕排版發聲</title>
+  <style>
+    .container {
+      width: 600px;
+      margin: auto;
+      padding: 20px;
+      background-image: url('your_image.png');
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      border: 1px solid #ccc;
+    }
+
+    .button-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 10px;
+      gap: 10px;
+    }
+
+    .abs-button {
+      background: none;
+      border: 1px solid #999;
+      padding: 5px 10px;
+      cursor: pointer;
+      color: black;
+      font-size: 16px;
+    }
+
+    .abs-button.long {
+      font-size: 20px;
+      width: 100%;
+      justify-content: center;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="button-row">
+    <button class="abs-button" onclick="playSound('tamen')">他們</button>
+    <button class="abs-button" onclick="playSound('chao')">朝</button>
+    <button class="abs-button" onclick="playSound('wo')">我</button>
+    <button class="abs-button" onclick="playSound('reng')">扔</button>
+    <button class="abs-button" onclick="playSound('pa1')">粑</button>
+    <button class="abs-button" onclick="playSound('pa1')">粑</button>
+  </div>
+
+  <div class="button-row">
+    <button class="abs-button" onclick="playSound('wo_jian_qi')">我撿起</button>
+    <button class="abs-button" onclick="playSound('wo_na')">我拿</button>
+    <button class="abs-button" onclick="playSound('yan')">煙</button>
+    <button class="abs-button" onclick="playSound('tou')">頭</button>
+    <button class="abs-button" onclick="playSound('ji')">雞</button>
+    <button class="abs-button" onclick="playSound('dan')">蛋</button>
+  </div>
+
+  <div class="button-row">
+    <button class="abs-button" onclick="playSound('dan_chao_fan')">蛋炒飯</button>
+    <button class="abs-button" onclick="playSound('pizza')">披薩</button>
+    <button class="abs-button" onclick="playSound('ba_ba')">粑粑</button>
+    <button class="abs-button" onclick="playSound('yan_tou2')">煙頭</button>
+    <button class="abs-button" onclick="playSound('mei_zuo')">沒座</button>
+    <button class="abs-button" onclick="playSound('zuo')">做</button>
+  </div>
+
+  <div class="button-row">
+    <button class="abs-button" onclick="playSound('chou_liang_kou')">抽兩口</button>
+    <button class="abs-button" onclick="playSound('dan_bing')">蛋撻</button>
+    <button class="abs-button" onclick="playSound('bai_cai')">白菜</button>
+    <button class="abs-button" onclick="playSound('wo_bu_shi_a_nuo')">我不是阿諾</button>
+  </div>
+
+  <div class="button-row">
+    <button class="abs-button long" onclick="playSound('wowowowo')">哦哦哦哦哦哦～</button>
+  </div>
+</div>
+
+<!-- Audio Elements -->
+<audio id="pizza" src="pizza.mp3"></audio>
+<audio id="tamen" src="tamen.mp3"></audio>
+<audio id="chao" src="chao.mp3"></audio>
+<audio id="wo" src="wo.mp3"></audio>
+<audio id="reng" src="reng.mp3"></audio>
+<audio id="pa1" src="pa1.mp3"></audio>
+<audio id="wo_jian_qi" src="wo_jian_qi.mp3"></audio>
+<audio id="wo_na" src="wo_na.mp3"></audio>
+<audio id="yan" src="yan.mp3"></audio>
+<audio id="tou" src="tou.mp3"></audio>
+<audio id="ji" src="ji.mp3"></audio>
+<audio id="dan" src="dan.mp3"></audio>
+<audio id="dan_chao_fan" src="dan_chao_fan.mp3"></audio>
+<audio id="ba_ba" src="ba_ba.mp3"></audio>
+<audio id="yan_tou2" src="yan_tou2.mp3"></audio>
+<audio id="mei_zuo" src="mei_zuo.mp3"></audio>
+<audio id="zuo" src="zuo.mp3"></audio>
+<audio id="chou_liang_kou" src="chou_liang_kou.mp3"></audio>
+<audio id="dan_bing" src="dan_bing.mp3"></audio>
+<audio id="bai_cai" src="bai_cai.mp3"></audio>
+<audio id="wo_bu_shi_a_nuo" src="wo_bu_shi_a_nuo.mp3"></audio>
+<audio id="wowowowo" src="wowowowo.mp3"></audio>
+
+<script>
+function playSound(soundId) {
+  var audio = document.getElementById(soundId);
+  audio.play();
+}
+</script>
+
+</body>
+</html>
