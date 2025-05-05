@@ -333,3 +333,4 @@ function showMapAndStreetView(lat, lng, label) {
     .bindPopup(label)
     .openPopup();
 }
+}
