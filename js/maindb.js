@@ -519,7 +519,7 @@ window.loadAchievements = async function() {
       document.getElementById("achievements-list").innerHTML += `
         <br>
         <br>
-        <iframe src="mm/damain.html" width="1086" height="300" style="border:none;"></iframe>
+        <iframe src="mm/damain.html" width="100%" height="300vh" style="border:none;"></iframe>
       `;
     }
 
