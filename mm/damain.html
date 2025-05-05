@@ -105,11 +105,23 @@
 <audio id="wowowowo" src="wowowowo.mp3"></audio>
 
 <script>
-function playSound(soundId) {
-  var audio = document.getElementById(soundId);
-  audio.play();
-}
-</script>
+  var currentAudio = null;
+  
+  function playSound(soundId) {
+    // 停止前一個音頻（如果有的話）
+    if (currentAudio && !currentAudio.paused) {
+      currentAudio.pause();
+      currentAudio.currentTime = 0; // 重置音頻播放進度
+    }
+  
+    // 播放新音頻
+    var audio = document.getElementById(soundId);
+    audio.play();
+  
+    // 記錄當前播放的音頻
+    currentAudio = audio;
+  }
+  </script>
 
 </body>
 </html>
