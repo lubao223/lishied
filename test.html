@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+
+<html lang="zh">
+
+<head>
+
+  <meta charset="UTF-8" />
+
+  <title>導航地圖</title>
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
+
+  <style>
+
+   body {
+
+      margin: 0;
+
+      font-family: sans-serif;
+
+      display: flex;
+
+      justify-content: space-between;
+
+    }
+
+
+
+    #map {
+
+      height: 70vh;
+
+      width: 70vw;
+
+    }
+
+
+
+    #directions-panel {
+
+      height: 70vh;
+
+      width: 30vw;
+
+      overflow-y: auto;
+
+      padding: 10px;
+
+      border-left: 1px solid #ccc;
+
+      background: #f8f8f8;
+
+    }
+
+
+
+    #context-menu {
+
+      position: absolute;
+
+      background: white;
+
+      border: 1px solid #ccc;
+
+      display: none;
+
+      z-index: 1000;
+
+      box-shadow: 2px 2px 6px rgba(0,0,0,0.2);
+
+    }
+
+
+
+    #context-menu div {
+
+      padding: 8px 12px;
+
+      cursor: pointer;
+
+    }
+
+
+
+    #context-menu div:hover {
+
+      background: #eee;
+
+    }
+
+
+
+  </style>
+
+</head>
+
+<body>
+
+  <div id="map"></div>
+
+  <div id="context-menu">
+
+    <div id="set-start">設為起點</div>
+
+    <div id="set-end">設為終點</div>
+
+    <div id="add-waypoint">新增停靠點</div>
+
+    <div id="clear-route">清除路徑</div>
+
+  </div>
+
+  <div id="directions-panel">請右鍵點地圖設置起點與終點</div>
+
+
+
+  <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+
+  <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.min.js"></script>
+
+
+
+  <script>
+
+    const map = L.map('map').setView([25.05543, 121.55428], 13);
+
+
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+
+      attribution: '&copy; OpenStreetMap contributors'
+
+    }).addTo(map);
+
+
+
+    let currentLatLng = null;
+
+    const contextMenu = document.getElementById('context-menu');
+
+    const directionPanel = document.getElementById('directions-panel');
+
+    const markers = [];
+
+
+
+    const routing = L.Routing.control({
+
+      waypoints: [],
+
+      routeWhileDragging: true,
+
+      language: 'en',
+
+      router: L.Routing.osrmv1({ profile: 'car' }),
+
+      show: false,
+
+      createMarker: function(i, wp, nWps) {
+
+        let color = 'blue';
+
+        if (i === 0) color = 'green';
+
+        else if (i === nWps - 1) color = 'red';
+
+
+
+        const marker = L.circleMarker(wp.latLng, {
+
+          radius: 8,
+
+          color: color,
+
+          fillColor: color,
+
+          fillOpacity: 1,
+
+        }).addTo(map);
+
+
+
+        markers.push(marker);
+
+        return marker;
+
+      }
+
+    }).addTo(map);
+
+
+
+    routing.on('routesfound', function(e) {
+
+  const route = e.routes[0];
+
+  const instructions = [];
+
+  const distance = route.summary.totalDistance / 1000; // Convert to km
+
+  const time = route.summary.totalTime / 60; // Convert to minutes
+
+
+
+  route.instructions.forEach(instr => {
+
+    let instructionText = instr.text;
+
+
+
+
+
+    instructions.push(instructionText);
+
+  });
+
+
+
+  directionPanel.innerHTML = `
+
+    <div><b>導航</b></div>
+
+    <div>距離: ${(distance).toFixed(2)} 公里. 時間: ${Math.round(time)} 分鐘。</div>
+
+    <ol>${instructions.map(t => `<li>${t}</li>`).join('')}</ol>
+
+  `;
+
+});
+
+
+
+
+
+    map.on('contextmenu', function(e) {
+
+      currentLatLng = e.latlng;
+
+      contextMenu.style.left = e.originalEvent.pageX + 'px';
+
+      contextMenu.style.top = e.originalEvent.pageY + 'px';
+
+      contextMenu.style.display = 'block';
+
+    });
+
+
+
+    map.on('click', () => contextMenu.style.display = 'none');
+
+
+
+    function updateWaypoints(action) {
+
+      let waypoints = routing.getWaypoints().map(wp => wp.latLng).filter(p => p);
+
+
+
+      if (action === 'start') {
+
+        if (waypoints.length === 0) {
+
+          waypoints = [currentLatLng];
+
+        } else {
+
+          waypoints[0] = currentLatLng;
+
+        }
+
+        if (waypoints.length < 2) waypoints.push(currentLatLng);
+
+      } else if (action === 'end') {
+
+        if (waypoints.length === 0) {
+
+          waypoints = [currentLatLng];
+
+        }
+
+        if (waypoints.length === 1) {
+
+          waypoints.push(currentLatLng);
+
+        } else {
+
+          waypoints[waypoints.length - 1] = currentLatLng;
+
+        }
+
+      } else if (action === 'waypoint') {
+
+        if (waypoints.length >= 2) {
+
+          waypoints.splice(waypoints.length - 1, 0, currentLatLng);
+
+        } else {
+
+          waypoints.push(currentLatLng);
+
+        }
+
+      } else if (action === 'clear') {
+
+        routing.setWaypoints([]);
+
+        markers.forEach(m => map.removeLayer(m));
+
+        markers.length = 0;
+
+        directionPanel.innerHTML = '請右鍵點地圖設置起點與終點';
+
+        return;
+
+      }
+
+
+
+      markers.forEach(m => map.removeLayer(m));
+
+      markers.length = 0;
+
+
+
+      routing.setWaypoints(waypoints);
+
+    }
+
+
+
+    document.getElementById('set-start').onclick = () => {
+
+      updateWaypoints('start');
+
+      contextMenu.style.display = 'none';
+
+    };
+
+    document.getElementById('set-end').onclick = () => {
+
+      updateWaypoints('end');
+
+      contextMenu.style.display = 'none';
+
+    };
+
+    document.getElementById('add-waypoint').onclick = () => {
+
+      updateWaypoints('waypoint');
+
+      contextMenu.style.display = 'none';
+
+    };
+
+    document.getElementById('clear-route').onclick = () => {
+
+      updateWaypoints('clear');
+
+      contextMenu.style.display = 'none';
+
+    };
+
+
+
+    const landmarks = [
+
+      { title: "五妃廟", lat: 22.982081, lng: 120.205214 },
+
+      { title: "二鯤鯓砲臺（億載金城）", lat: 22.988531, lng: 120.160207 },
+
+      { title: "臺南孔子廟", lat: 22.990523, lng: 120.204267 },
+
+      { title: "紅毛城（淡水）", lat: 25.17543, lng: 121.432942 },
+
+      { title: "打狗英國領事館", lat: 22.618849, lng: 120.266948 },
+
+      { title: "大龍峒保安宮", lat: 25.073626, lng: 121.515517 },
+
+      { title: "吉安慶修院", lat: 23.974302701095226, lng: 121.5644285095056 },
+
+      { title: "花蓮吉安開拓紀念碑", lat: 23.948905, lng: 121.52323 },
+
+      { title: "林氏貞節牌坊", lat: 24.34464502461078, lng: 120.62187266718843 },
+
+      { title: "赤嵌樓", lat: 22.9975, lng: 120.202811 },
+
+      { title: "總統府", lat: 25.04, lng: 121.511944 },
+
+      { title: "鹿港天后宮", lat: 24.059338, lng: 120.43138 },
+
+      { title: "艋舺龍山寺", lat: 25.037347, lng: 121.499893 },
+
+      { title: "彰化扇形車庫", lat: 24.086111, lng: 120.540202 }
+
+    ];
+
+
+
+    landmarks.forEach(({ title, lat, lng }) => {
+
+      const marker = L.marker([lat, lng]).addTo(map).bindPopup(title);
+
+
+
+      marker.on('click', () => {
+
+        currentLatLng = L.latLng(lat, lng);
+
+        const popupContent = `
+
+          <b>${title}</b><br/>
+
+          <button onclick="setFromPOI('start')">設為起點</button>
+
+          <button onclick="setFromPOI('end')">設為終點</button>
+
+          <button onclick="setFromPOI('waypoint')">新增停靠點</button>
+
+        `;
+
+        marker.bindPopup(popupContent).openPopup();
+
+      });
+
+    });
+
+
+
+    window.setFromPOI = function(action) {
+
+      updateWaypoints(action);
+
+    };
+
+  </script>
+
+</body>
+
+</html>
