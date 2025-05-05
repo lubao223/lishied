@@ -304,6 +304,8 @@ summary {
   border: 1px solid #ccc;
 }
   </style>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body>
   <script type="module" src="js/maindb.js"></script>
@@ -314,6 +316,7 @@ summary {
       <div class="menu-item" onclick="updateContent(3)">留言板</div>
       <div class="menu-item" onclick="updateContent(4)">成就</div>
       <div class="menu-item" onclick="updateContent(5)">排行榜</div>
+      <div class="menu-item" onclick="updateContent(6)">導航</div>
       
     </div>
     <div class="username" onclick="toggleDropdown()">
@@ -335,6 +338,9 @@ summary {
       <img id="modal-img" src="" alt="" style="width: 100%; border-radius: 8px;">
       <h2 id="modal-title"></h2>
       <div id="modal-description"></div>
+      <br><br><br>
+      <div id="map-container" style="width:100%; height:400px; display:none;"></div>
+      <button id="show-map-btn" class="complete-btn">顯示地圖</button>
       <button id="complete-btn" class="complete-btn" onclick="markComplete()">完成</button>
       <button id="close-btn"class="close-btn" onclick="closeModal()">關閉</button>
       <button id="how" onclick="closeModal()"> 好 </button>
