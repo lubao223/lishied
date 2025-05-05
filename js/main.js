@@ -175,6 +175,8 @@ function updateContent(index) {
       content.appendChild(details);
     };
   } else if (index == 2) {
+    const mapbtn = document.getElementById("show-map-btn");
+  mapbtn.style.display = "none";
     openModal2()
     content.innerHTML = `<iframe src="test001.html" style="width: 100%; height: 100vh; border: none;"></iframe>`;
   } else if (index == 3) {
