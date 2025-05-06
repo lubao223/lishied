@@ -131,111 +131,7 @@ const cardsData = [
 
 
 ];
-const groupByRegion = {};
-cardsData.forEach(card => {
-  if (!groupByRegion[card.region]) {
-    groupByRegion[card.region] = [];
-  }
-  groupByRegion[card.region].push(card);
-});
-function updateContent(index) {
-  const content = document.getElementById("main-content");
 
-  if (index == 1) {
-    content.innerHTML = '';
-    const completedPlacesFromLocal = window.getCompletedFromLocal(); // 載入已完成地點
-    for (const region in groupByRegion) {
-      const details = document.createElement("details");
-      const summary = document.createElement("summary");
-      summary.textContent = region;
-      details.appendChild(summary);
-
-      const container = document.createElement("div");
-      container.classList.add("card-container");
-
-      groupByRegion[region].forEach((card, regionIndex) => {
-        const cardDiv = document.createElement("div");
-        cardDiv.classList.add("card");
-        cardDiv.innerHTML = `
-          <img src="${card.image}" alt="${card.title}" style="width: 100%; height: 120px; object-fit: cover; border-radius: 6px;">
-          <h2>${card.title}</h2>
-          <h3>地址: ${card.address}</h3>
-        `;
-        // 在 DOM 元素上儲存區域和區域內索引
-        if (completedPlacesFromLocal.includes(card.title)) {
-          cardDiv.classList.add("completed"); // 你需要在 CSS 中定義 .completed 的樣式
-        }
-        cardDiv.dataset.region = region;
-        cardDiv.dataset.regionIndex = regionIndex;
-        cardDiv.onclick = () => openModal(cardDiv.dataset.region, parseInt(cardDiv.dataset.regionIndex));
-        container.appendChild(cardDiv);
-      });
-
-      details.appendChild(container);
-      content.appendChild(details);
-    };
-  } else if (index == 2) {
-    const mapbtn = document.getElementById("show-map-btn");
-  mapbtn.style.display = "none";
-    openModal2()
-    content.innerHTML = `<iframe src="test001.html" style="width: 100%; height: 100vh; border: none;"></iframe>`;
-  } else if (index == 3) {
-    content.innerHTML = `
-    <h2>留言板</h2>
-    <textarea id="newComment" placeholder="寫下你的留言..." rows="3" style="width: 100%;"></textarea><br>
-    <button onclick="postComment()">發布留言</button>
-    <button onclick="loadComments()">重新整理</button>
-    <div id="commentsList"></div>
-  `;
-    loadComments(); // 載入留言
-
-  }
-
-  else if (index == 5) {
-    content.innerHTML = `<h2>排行榜</h2><div id="leaderboard" class="leaderboard-container"></div>`;
-    getLeaderboard();
-
-  } else if (index == 4) {
-    content.innerHTML = `<h2>我的成就</h2><div id="achievements-list">載入中...</div>`;
-    loadAchievements();
-  }
-    else if (index == 6) {
-
-    content.innerHTML = `<iframe src="test.html" style="width: 100%; height: 100vh; border: none;"></iframe>`;}
-  else {
-    content.innerHTML = `<p>這是項目 ${index} 的內容。</p>`;
-  }
-}
-function toggleDropdown() {
-  const dropdown = document.getElementById("user-dropdown");
-  dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
-}
-
-function openModal(region, regionIndex) {
-  const modal = document.getElementById("modal");
-  const mapbtn = document.getElementById("show-map-btn");
-  mapbtn.style.display = "inline-block";
-  const mapContainer = document.getElementById("map-container");
-  mapContainer.style.display = "none";
-  const card = groupByRegion[region][regionIndex];
-
-  window.currentCard = card;
-  document.getElementById("modal-img").src = card.image;
-  document.getElementById("modal-title").textContent = card.title;
-  document.getElementById("modal-description").textContent = card.description;
-
-  modal.style.display = "flex";
-  document.getElementById("complete-btn").style.display = "inline-block";
-  document.getElementById("close-btn").style.display = "inline-block";
-  document.getElementById("how").style.display = "none";
-
-  
-document.getElementById("show-map-btn").onclick = () => {
-
-  const mapContainer = document.getElementById("map-container");
-  mapContainer.style.display = "block";
-  showMapAndStreetView(card.lat, card.lng, card.title);
-};
 
 
 function openModal2() {
@@ -313,6 +209,116 @@ function renderCards() {
     content.appendChild(details);
   }
 }
+
+const groupByRegion = {};
+cardsData.forEach(card => {
+  if (!groupByRegion[card.region]) {
+    groupByRegion[card.region] = [];
+  }
+  groupByRegion[card.region].push(card);
+});
+function updateContent(index) {
+  const content = document.getElementById("main-content");
+
+  if (index == 1) {
+    content.innerHTML = '';
+    const completedPlacesFromLocal = window.getCompletedFromLocal(); // 載入已完成地點
+    for (const region in groupByRegion) {
+      const details = document.createElement("details");
+      const summary = document.createElement("summary");
+      summary.textContent = region;
+      details.appendChild(summary);
+
+      const container = document.createElement("div");
+      container.classList.add("card-container");
+
+      groupByRegion[region].forEach((card, regionIndex) => {
+        const cardDiv = document.createElement("div");
+        cardDiv.classList.add("card");
+        cardDiv.innerHTML = `
+          <img src="${card.image}" alt="${card.title}" style="width: 100%; height: 120px; object-fit: cover; border-radius: 6px;">
+          <h2>${card.title}</h2>
+          <h3>地址: ${card.address}</h3>
+        `;
+        // 在 DOM 元素上儲存區域和區域內索引
+        if (completedPlacesFromLocal.includes(card.title)) {
+          cardDiv.classList.add("completed"); // 你需要在 CSS 中定義 .completed 的樣式
+        }
+        cardDiv.dataset.region = region;
+        cardDiv.dataset.regionIndex = regionIndex;
+        cardDiv.onclick = () => openModal(cardDiv.dataset.region, parseInt(cardDiv.dataset.regionIndex));
+        container.appendChild(cardDiv);
+      });
+
+      details.appendChild(container);
+      content.appendChild(details);
+    };
+  } else if (index == 2) {
+    const mapbtn = document.getElementById("show-map-btn");
+    mapbtn.style.display = "none";
+    openModal2();
+    content.innerHTML = `<iframe src="test001.html" style="width: 100%; height: 100vh; border: none;"></iframe>`;
+  } else if (index == 3) {
+    content.innerHTML = `
+    <h2>留言板</h2>
+    <textarea id="newComment" placeholder="寫下你的留言..." rows="3" style="width: 100%;"></textarea><br>
+    <button onclick="postComment()">發布留言</button>
+    <button onclick="loadComments()">重新整理</button>
+    <div id="commentsList"></div>
+  `;
+    loadComments(); // 載入留言
+
+  }
+
+  else if (index == 5) {
+    content.innerHTML = `<h2>排行榜</h2><div id="leaderboard" class="leaderboard-container"></div>`;
+    getLeaderboard();
+
+  } else if (index == 4) {
+    content.innerHTML = `<h2>我的成就</h2><div id="achievements-list">載入中...</div>`;
+    loadAchievements();
+  }
+    else if (index == 6) {
+
+    content.innerHTML = `<iframe src="test.html" style="width: 100%; height: 100vh; border: none;"></iframe>`;}
+  else {
+    content.innerHTML = `<p>這是項目 ${index} 的內容。</p>`;
+  }
+}
+function toggleDropdown() {
+  const dropdown = document.getElementById("user-dropdown");
+  dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
+}
+
+function openModal(region, regionIndex) {
+  const modal = document.getElementById("modal");
+  const mapbtn = document.getElementById("show-map-btn");
+  mapbtn.style.display = "inline-block";
+  const mapContainer = document.getElementById("map-container");
+  mapContainer.style.display = "none";
+  const card = groupByRegion[region][regionIndex];
+
+  window.currentCard = card;
+  document.getElementById("modal-img").src = card.image;
+  document.getElementById("modal-title").textContent = card.title;
+  document.getElementById("modal-description").textContent = card.description;
+
+  modal.style.display = "flex";
+  document.getElementById("complete-btn").style.display = "inline-block";
+  document.getElementById("close-btn").style.display = "inline-block";
+  document.getElementById("how").style.display = "none";
+
+  
+document.getElementById("show-map-btn").onclick = () => {
+
+  const mapContainer = document.getElementById("map-container");
+  mapContainer.style.display = "block";
+  showMapAndStreetView(card.lat, card.lng, card.title);
+};
+
+
+
+
 
 function showMapAndStreetView(lat, lng, label) {
   const mapContainer = document.getElementById("map-container");
