@@ -305,14 +305,15 @@ function toggleDropdown() {
 function openModal(region, regionIndex) {
   const modal = document.getElementById("modal");
   const mapbtn = document.getElementById("show-map-btn");
-  const changebtn = document.getElementById("toggle-desc-btn");
-    changebtn.style.display = "inline-block";
   mapbtn.style.display = "inline-block";
   const mapContainer = document.getElementById("map-container");
   mapContainer.style.display = "none";
-  const card = groupByRegion[region][regionIndex];
 
+  const card = groupByRegion[region][regionIndex];
   window.currentCard = card;
+  let showingHistory = false; // 狀態變數：目前是否顯示 history
+
+  // 初始顯示 description
   document.getElementById("modal-img").src = card.image;
   document.getElementById("modal-title").textContent = card.title;
   document.getElementById("modal-description").textContent = card.description;
@@ -322,20 +323,20 @@ function openModal(region, regionIndex) {
   document.getElementById("close-btn").style.display = "inline-block";
   document.getElementById("how").style.display = "none";
 
-  
-document.getElementById("show-map-btn").onclick = () => {
+  // 地圖按鈕行為
+  document.getElementById("show-map-btn").onclick = () => {
+    mapContainer.style.display = "block";
+    showMapAndStreetView(card.lat, card.lng, card.title);
+  };
 
-  const mapContainer = document.getElementById("map-container");
-  mapContainer.style.display = "block";
-  showMapAndStreetView(card.lat, card.lng, card.title);
-
+  // 新增切換介紹按鈕行為
   document.getElementById("toggle-desc-btn").onclick = () => {
     showingHistory = !showingHistory;
     document.getElementById("modal-description").textContent = showingHistory
       ? card.history
       : card.description;
   };
-};
+}
 
 
 
