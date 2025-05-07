@@ -305,6 +305,8 @@ function toggleDropdown() {
 function openModal(region, regionIndex) {
   const modal = document.getElementById("modal");
   const mapbtn = document.getElementById("show-map-btn");
+  const changebtn = document.getElementById("toggle-desc-btn");
+    changebtn.style.display = "inline-block";
   mapbtn.style.display = "inline-block";
   const mapContainer = document.getElementById("map-container");
   mapContainer.style.display = "none";
