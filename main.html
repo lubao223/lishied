@@ -300,9 +300,367 @@ summary {
 }
 /* 已完成卡片的樣式 */
 .card.completed {
-  background-color: gold; /* 淡藍色或其他你喜歡的顏色 */
+  background-color: rgb(226, 211, 128); /* 淡藍色或其他你喜歡的顏色 */
   border: 1px solid #ccc;
 }
+
+#logDisplay {
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    padding: 10px;
+    height: 200px;
+    overflow-y: auto;
+    box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.05);
+    margin-bottom: 20px;
+    font-size: 14px;
+  }
+
+  
+  .battle-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 0.4fr 0.3fr;
+  gap: 12px; /* 壓縮間距 */
+  max-width: 1000px;
+  margin: auto;
+  height: 100vh;
+  padding: 16px; /* 縮小內距 */
+  box-sizing: border-box;
+}
+
+.grid-item {
+  background-color: #f9f9f9;
+  padding: 12px; /* 壓縮每格內距 */
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.player-info, .hp-info, .actions, .log {
+  min-height: 0;
+}
+
+.hp-bar-container {
+  position: relative;
+  height: 18px;
+  background-color: #eee;
+  border-radius: 9px;
+  overflow: hidden;
+  margin: 5px 0;
+}
+
+.hp-bar {
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+.hp-red {
+  background-color: #ff4d4d;
+}
+
+.hp-blue {
+  background-color: #4d94ff;
+}
+
+.hp-overflow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background-color: gold;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+#logDisplay {
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 8px;
+  height: 160px; /* 稍微壓縮高度 */
+  overflow-y: auto;
+  font-size: 14px;
+  box-shadow: inset 0 0 3px rgba(0,0,0,0.04);
+}
+
+.actions input[type="number"] {
+  padding: 5px;
+  width: 70px;
+  border: 1px solid #bbb;
+  border-radius: 6px;
+  margin-left: 6px;
+}
+
+.action-btn {
+  padding: 8px 16px;
+  font-size: 15px;
+  margin-right: 8px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  margin-top: 8px;
+}
+
+.action-btn.attack {
+  background-color: #ff6666;
+  color: white;
+}
+
+.action-btn.attack:hover {
+  background-color: #e05555;
+}
+
+.action-btn.heal {
+  background-color: #62d37f;
+  color: white;
+}
+
+.action-btn.heal:hover {
+  background-color: #0ceb17;
+}
+
+h3 {
+  margin-bottom: 8px;
+  border-left: 4px solid #4d94ff;
+  padding-left: 8px;
+  font-size: 17px;
+}
+
+
+/* 日期標題 */
+/* 基本樣式 */
+#battleLogsList {
+  font-family: Arial, sans-serif;
+  padding: 0;
+  margin: 0;
+  list-style-type: none;
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.date-item {
+  border-bottom: 1px solid #ddd;
+  padding: 10px 0;
+}
+
+.date-header {
+  font-size: 18px;
+  font-weight: bold;
+  color: #2e3a59;
+  background-color: #f4f6f9;
+  padding: 8px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  display: inline-block;
+  width: 100%;
+}
+
+.date-header:hover {
+  background-color: #e2e8f0;
+}
+
+.date-header:active {
+  background-color: #ccd3e0;
+}
+
+
+.battle-title {
+    text-align: center;
+    font-size: 24px;
+    font-weight: bold;
+    margin: 30px 0 20px;
+  }
+
+  .battle-wrapper {
+    display: flex;
+    width: 90%;
+    max-width: 800px;
+    height: 300px;
+    margin: auto;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  }
+
+  .team {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    position: relative;
+    padding: 30px;
+    font-size: 18px;
+  }
+
+  .red {
+    background: linear-gradient(135deg, #ff4d4d, #990000);
+    clip-path: polygon(0 0, 100% 0, 85% 100%, 0% 100%);
+  }
+
+  .blue {
+    background: linear-gradient(135deg, #4d79ff, #003399);
+    clip-path: polygon(15% 0, 100% 0, 100% 100%, 0% 100%);
+  }
+
+  .team p {
+    margin: 8px 0;
+  }
+
+  .team button {
+    margin-top: 15px;
+    padding: 12px 24px;
+    font-size: 16px;
+    background: #ffffff;
+    color: #222;
+    border: none;
+    border-radius: 30px;
+    font-weight: bold;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    transition: all 0.3s ease;
+    cursor: pointer;
+  }
+
+  .team button:hover {
+    background: #f0f0f0;
+    transform: translateY(-2px);
+  }
+  .profile-card {
+    max-width: 600px;
+    margin: 30px auto;
+    padding: 24px 32px;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+    font-family: "Segoe UI", sans-serif;
+    color: #333;
+  }
+
+  .profile-card h3, .profile-card h4 {
+    color: #222;
+    margin-bottom: 16px;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 4px;
+  }
+
+  .profile-card p {
+    margin: 10px 0;
+    line-height: 1.5;
+  }
+
+  .profile-card button {
+    padding: 6px 14px;
+    margin-left: 8px;
+    background-color: #4d79ff;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+
+  .profile-card button:hover {
+    background-color: #355be0;
+  }
+
+  #edit-name-form {
+    margin-top: 10px;
+  }
+
+  #edit-name-form input {
+    padding: 6px 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 14px;
+    margin-right: 6px;
+  }
+
+  #edit-name-form button {
+    margin-right: 6px;
+  }
+
+  .progress-section {
+    margin-top: 20px;
+    background: #f9f9f9;
+    padding: 12px 16px;
+    border-radius: 10px;
+  }
+
+
+  .comment {
+    background: #fefefe;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.05);
+    font-family: "Segoe UI", sans-serif;
+  }
+
+  .comment strong {
+    font-size: 16px;
+    color: #333;
+  }
+
+  .comment span {
+    display: block;
+    margin: 8px 0;
+    font-size: 15px;
+  }
+
+  .comment small {
+    color: #888;
+    font-size: 12px;
+  }
+
+  .comment .comment-actions {
+    margin-top: 8px;
+  }
+
+  .comment button {
+    margin: 4px 6px 4px 0;
+    padding: 6px 12px;
+    background-color: #eaeaea;
+    color: #333;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .comment button:hover {
+    background-color: #d5d5d5;
+  }
+
+  .comment textarea {
+    width: 100%;
+    padding: 8px;
+    font-size: 14px;
+    margin-top: 10px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    resize: vertical;
+  }
+
+  .comment textarea + button {
+    margin-top: 6px;
+    background-color: #4d79ff;
+    color: white;
+  }
+
+  .comment textarea + button:hover {
+    background-color: #355be0;
+  }
   </style>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -313,25 +671,28 @@ summary {
     <div class="menu">
       <div class="menu-item" onclick="updateContent(1)">歷史建築介紹</div>
       <div class="menu-item" onclick="updateContent(2)">地理位置猜猜看</div>
+      <div class="menu-item" onclick="updateContent(7)">領地爭奪戰</div>
+      <div class="menu-item" onclick="updateContent(8)">歷史戰鬥紀錄</div>
       <div class="menu-item" onclick="updateContent(3)">留言板</div>
       <div class="menu-item" onclick="updateContent(4)">成就</div>
       <div class="menu-item" onclick="updateContent(5)">排行榜</div>
       <div class="menu-item" onclick="updateContent(6)">導航</div>
-      
     </div>
+    
     <div class="username" onclick="toggleDropdown()">
       <span id="user-name">使用者</span>
       <div class="dropdown" id="user-dropdown">
-        <a href="#" onclick="showProfile()">查看資料</a>
+        <a href="#" onclick="showProfile(); toggleDropdown()">查看資料</a>
         <a href="#" onclick="logout()">登出</a>
       </div>
     </div>
   </header>
 
   <div class="content" id="main-content">
+    
     請點選上方項目查看內容。
   </div>
-
+  <div id="battleResult" style="display:none;"></div>
   <!-- Modal for card details -->
   <div id="modal" class="modal">
     <div class="modal-content">

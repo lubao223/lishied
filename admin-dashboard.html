@@ -50,31 +50,64 @@
 </head>
 
 <body>
-    <h1>後台管理系統</h1>
-    <button onclick="logout()">登出</button>
-
-    <table id="usersTable">
-        <thead>
-            <tr>
-                <th>使用者名稱</th>
-                <th>電子郵件</th>
-                <th>註冊時間</th>
-                <th>最後登入</th>
-                <th>成就完成率</th>
-                <th>操作</th>
-              </tr>
-          </thead>
-        <tbody></tbody>
-      </table>
-
-   
+  <button onclick="toggleView('battle')">切換到國戰管理</button>
+  <button onclick="toggleView('users')">切換到用戶管理</button>
+  
+  <div id="battleSection">
+    <h1>後台管理系統</h1>
+    <h2>國戰控制台</h2>
+    <div>
+      <label>戰鬥名稱：<input id="battleName" /></label><br />
+      <label>紅隊名稱：<input id="teamRed" value="紅隊" /></label><br />
+      <label>藍隊名稱：<input id="teamBlue" value="藍隊" /></label><br />
+      <label>結束時間（ISO格式）：<input id="endTime" placeholder="2025-05-08T23:59" /></label><br />
+      <button onclick="startBattle()">開啟戰鬥</button>
+    </div>
+    <h3>目前戰鬥狀態</h3>
+    <div id="battleStatus">載入中...</div>
+    <h3>兩軍血量</h3>
+    <div id="battleHP">載入中...</div>
+    <h3>玩家列表</h3>
+    <table border="1">
+      <thead><tr><th>名稱</th><th>陣營</th><th>得分</th><th>貢獻度</th></tr></thead>
+      <tbody id="playerTableBody"></tbody>
+    </table>
+    <h3>戰鬥 Log</h3>
+    <div id="logDisplay" style="overflow-y: scroll; height: 200px;">
+      <!-- 實時更新的 log 會顯示在這裡 -->
+  </div>
+    <button onclick="endBattle()">手動結束戰鬥</button>
+    <button onclick="logout()">登出</button>
+  </div>
+  
+  <div id="usersSection" style="display: none;">
+    <h2>用戶管理</h2>
+    <table id="usersTable" border="1">
+      <thead>
+        <tr>
+          <th>使用者名稱</th>
+          <th>電子郵件</th>
+          <th>註冊時間</th>
+          <th>最後登入</th>
+          <th>成就完成率</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+  <script>
+  function toggleView(section) {
+    document.getElementById('battleSection').style.display = (section === 'battle') ? 'block' : 'none';
+    document.getElementById('usersSection').style.display = (section === 'users') ? 'block' : 'none';
+  }</script>
+    
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { getFirestore, collection, getDocs, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
     import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
-
- 
+    import { set, onValue, update, remove } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
 
     const firebaseConfig = {
     apiKey: "AIzaSyAxEJP1PcgOUchT_6qHyG5y4f2NvAyB12k",
@@ -86,6 +119,7 @@
     appId: "1:568098017999:web:f7729d8bcc1710be1f9dba",
     measurementId: "G-JBXQHB2444"
   };
+
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const rtdb = getDatabase(app);
@@ -227,6 +261,229 @@
         alert("登出失敗：" + error.message);
       });
     };
+
+    window.startBattle = async function () {
+  const battleName = document.getElementById("battleName").value || "無標題戰鬥";
+  const teamRed = document.getElementById("teamRed").value || "紅隊";
+  const teamBlue = document.getElementById("teamBlue").value || "藍隊";
+  const endTime = document.getElementById("endTime").value;
+
+  const battleRef = ref(rtdb, "battle/current");
+  const initialHP = 1000; // 你可以改成表單輸入
+await set(battleRef, {
+  name: battleName,
+  status: "active",
+  startTime: Date.now(),
+  endTime: endTime ? new Date(endTime).getTime() : null,
+  initialHP,
+  teams: {
+    red: { name: teamRed, score: 0, hp: initialHP },
+    blue: { name: teamBlue, score: 0, hp: initialHP }
+  },
+  players: {},
+  log: []
+});
+startBattleHpWatcher();
+setInterval(async () => {
+  const battleRef = ref(rtdb, "battle/current");
+  const snapshot = await get(battleRef);
+  if (!snapshot.exists()) return;
+
+  const data = snapshot.val();
+  if (data.status !== "active" || !data.endTime) return;
+
+  const now = Date.now();
+  if (now >= data.endTime) {
+    // 自動結束並比較分數
+    const redScore = data.teams?.red?.hp ?? 0;
+    const blueScore = data.teams?.blue?.hp ?? 0;
+
+    let winner = "draw";
+    if (redScore > blueScore) winner = "red";
+    else if (blueScore > redScore) winner = "blue";
+
+    await update(battleRef, {
+      status: "ended",
+      endedAt: now,
+      result: {
+        winner,
+        reason: "timeout"
+      }
+    });
+
+    console.log(`戰鬥時間到，${winner === "draw" ? "平手" : `${data.teams[winner].name} 勝出！`}`);
+  }
+}, 6000); // 每 5 秒檢查一次
+  alert("戰鬥已開啟！");
+};
+
+window.endBattle = async function () {
+  const confirmed = confirm("確定要手動結束戰鬥嗎？");
+  if (!confirmed) return;
+
+  const battleRef = ref(rtdb, "battle/current");
+
+  const snapshot = await get(battleRef);
+  if (!snapshot.exists()) {
+    alert("目前沒有進行中的戰鬥");
+    return;
+  }
+
+  const data = snapshot.val();
+  const redScore = data.teams?.red?.hp ?? 0;
+  const blueScore = data.teams?.blue?.hp ?? 0;
+
+  let winner = "draw";
+  if (redScore > blueScore) winner = "red";
+  else if (blueScore > redScore) winner = "blue";
+
+  await update(battleRef, {
+    status: "ended",
+    endedAt: Date.now(),
+    result: {
+      winner,
+      reason: "manual"
+    }
+  });
+
+  alert(`戰鬥已結束！${winner === "draw" ? "平手" : `${data.teams[winner].name} 勝出！`}`);
+};
+
+// 監聽戰況顯示
+const battleStatusDiv = document.getElementById("battleStatus");
+const currentBattleRef = ref(rtdb, "battle/current");
+onValue(currentBattleRef, (snapshot) => {
+  const data = snapshot.val();
+  if (!data) {
+    battleStatusDiv.innerHTML = `
+    <div id="battleLogContainer">
+  <h3>戰鬥紀錄</h3>
+  <ul id="battleLogsList"></ul>
+</div>
+    目前沒有進行中的戰鬥`;
+    
+    return;
+  }
+
+  
+
+  const { name, status, teams, startTime, endTime } = data;
+  const red = teams?.red || {};
+  const blue = teams?.blue || {};
+  const hpDiv = document.getElementById("battleHP");
+const redHP = data.teams.red?.hp ?? 0;
+const blueHP = data.teams.blue?.hp ?? 0;
+hpDiv.innerHTML = `
+  <strong>${data.teams.red.name} HP：</strong>${redHP}<br />
+  <strong>${data.teams.blue.name} HP：</strong>${blueHP}
+`;
+
+const log = data?.log || {};  // 取得 log 資料，如果沒有則為空物件
+
+// 生成 log 顯示的 HTML
+const logDisplay = document.getElementById("logDisplay");
+logDisplay.innerHTML = "<ul>" + Object.values(log).map(entry => `
+  <li><strong>${new Date(entry.time).toLocaleTimeString()}</strong> ${entry.player} - ${entry.action}</li>
+`).join("") + "</ul>";
+
+
+const playerTableBody = document.getElementById("playerTableBody");
+playerTableBody.innerHTML = "";
+
+// 如果有玩家資料
+if (data.players) {
+  // 將玩家依隊伍分類
+  const redTeamPlayers = [];
+  const blueTeamPlayers = [];
+
+  Object.entries(data.players).forEach(([uid, p]) => {
+    if (p.team === "red") {
+      redTeamPlayers.push(p); // 紅隊玩家
+    } else if (p.team === "blue") {
+      blueTeamPlayers.push(p); // 藍隊玩家
+    }
+  });
+
+  // 顯示紅隊玩家
+  if (redTeamPlayers.length > 0) {
+    const redTeamRow = document.createElement("tr");
+    redTeamRow.innerHTML = `<td colspan="4"><strong>紅隊</strong></td>`; // 顯示紅隊標題
+    playerTableBody.appendChild(redTeamRow);
+
+    redTeamPlayers.forEach((p) => {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${p.name}</td>
+        <td>${p.team}</td>
+        <td>${p.score}</td>
+        <td>${p.contribution}</td>
+      `;
+      playerTableBody.appendChild(row);
+    });
+  }
+
+  // 顯示藍隊玩家
+  if (blueTeamPlayers.length > 0) {
+    const blueTeamRow = document.createElement("tr");
+    blueTeamRow.innerHTML = `<td colspan="4"><strong>藍隊</strong></td>`; // 顯示藍隊標題
+    playerTableBody.appendChild(blueTeamRow);
+
+    blueTeamPlayers.forEach((p) => {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${p.name}</td>
+        <td>${p.team}</td>
+        <td>${p.score}</td>
+        <td>${p.contribution}</td>
+      `;
+      playerTableBody.appendChild(row);
+    });
+  }
+
+}
+  battleStatusDiv.innerHTML = `
+    <strong>名稱：</strong>${name}<br />
+    <strong>狀態：</strong>${status}<br />
+    <strong>紅隊：</strong>${red.name}（分數：${red.score}）<br />
+    <strong>藍隊：</strong>${blue.name}（分數：${blue.score}）<br />
+    <strong>開始時間：</strong>${new Date(startTime).toLocaleString("zh-Hant")}<br />
+    <strong>結束時間：</strong>${endTime ? new Date(endTime).toLocaleString("zh-Hant") : "未設定"}
+  `;
+});
+
+function startBattleHpWatcher() {
+  const battleRef = ref(rtdb, "battle/current");
+
+  onValue(battleRef, (snapshot) => {
+    const data = snapshot.val();
+    if (!data || data.status === "ended") return;
+
+    const redHp = data.teams?.red?.hp ?? 0;
+    const blueHp = data.teams?.blue?.hp ?? 0;
+
+    // 血量判斷
+    if (redHp <= 0 || blueHp <= 0) {
+  const winner = redHp <= 0 ? "blue" : "red";
+  const loser = redHp <= 0 ? "red" : "blue";
+
+  // 宣告勝利
+  update(battleRef, {
+    status: "ended",
+    result: {
+      winner,
+      reason: "hp_zero"
+    },
+    endedAt: Date.now()
+  });
+
+  console.log(`戰鬥結束！${winner} 勝出（${loser} 陣營血量歸零）`);
+}
+
+  });
+}
+
+
+
   </script>
 </body>
 
